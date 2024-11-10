@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { useQuery } from 'react-query';
-import { GoIssueClosed, GoIssueOpened } from 'react-icons/go';
-import { possibleStatus } from '../helpers/defaultData';
+import { IssueHeader } from './IssueHeader';
+import { Comment } from './Comment';
 
 function useIssueData(issueNumber) {
     return useQuery({
@@ -11,43 +11,21 @@ function useIssueData(issueNumber) {
     });
 }
 
-const IssueHeader = ({
-    title,
-    number,
-    status = 'todo',
-    createdBy,
-    createdAt,
-    comments,
-}) => {
-    const isIssueClosed = status === 'done' || status === 'cancelled';
-    const statusObject = possibleStatus.find(
-        (pstatus) => pstatus.id === status
-    );
-    return (
-        <header>
-            <h2>
-                {title} <span>#{number}</span>
-            </h2>
-            <div>
-                <span className={isIssueClosed ? 'closed' : 'open'}>
-                    {isIssueClosed ? (
-                        <GoIssueClosed style={{ color: 'red' }} />
-                    ) : (
-                        <GoIssueOpened style={{ color: 'green' }} />
-                    )}
-                    {statusObject.label}
-                </span>
-            </div>
-        </header>
-    );
-};
+function useIssueComments(issueNumber) {
+    return useQuery({
+        queryKey: ['issue', issueNumber, 'comments'],
+        queryFn: () =>
+            fetch(`/api/issues/${issueNumber}/comments`).then((res) =>
+                res.json()
+            ),
+    });
+}
 
 export default function IssueDetails() {
     const { number } = useParams();
 
     const issueQuery = useIssueData(number);
-
-    console.log(issueQuery.data);
+    const commentsQuery = useIssueComments(number);
 
     return (
         <div className="issue-details">
@@ -56,6 +34,18 @@ export default function IssueDetails() {
             ) : (
                 <>
                     <IssueHeader {...issueQuery.data} />
+                    <main>
+                        <section>
+                            {commentsQuery.isLoading ? (
+                                <p>Loading...</p>
+                            ) : (
+                                commentsQuery.data?.map((comment) => (
+                                    <Comment key={comment.id} {...comment} />
+                                ))
+                            )}
+                        </section>
+                        <aside></aside>
+                    </main>
                 </>
             )}
         </div>
