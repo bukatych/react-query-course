@@ -3,10 +3,11 @@ import { IssueItem } from './IssueItem';
 
 export default function IssuesList({ labels, status }) {
     const issuesQuery = useQuery(['issues', { labels, status }], () => {
-        const statusString = status ? `&status=${status}` : '';
         const labelsString = labels
             .map((label) => `labels[]=${label}`)
             .join('&');
+        const statusString = status ? `&status=${status}` : '';
+
         return fetch(`/api/issues?${labelsString}${statusString}`).then((res) =>
             res.json()
         );
