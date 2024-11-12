@@ -6,17 +6,19 @@ import { Comment } from './Comment';
 function useIssueData(issueNumber) {
     return useQuery({
         queryKey: ['issue', issueNumber],
-        queryFn: () =>
-            fetch(`/api/issues/${issueNumber}`).then((res) => res.json()),
+        queryFn: ({ signal }) =>
+            fetch(`/api/issues/${issueNumber}`, { signal }).then((res) =>
+                res.json()
+            ),
     });
 }
 
 function useIssueComments(issueNumber) {
     return useQuery({
         queryKey: ['issue', issueNumber, 'comments'],
-        queryFn: () =>
-            fetch(`/api/issues/${issueNumber}/comments`).then((res) =>
-                res.json()
+        queryFn: ({ signal }) =>
+            fetch(`/api/issues/${issueNumber}/comments`, { signal }).then(
+                (res) => res.json()
             ),
     });
 }
