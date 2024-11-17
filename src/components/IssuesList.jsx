@@ -1,10 +1,11 @@
-import { useQuery } from 'react-query';
+import { useQuery, useQueryClient } from 'react-query';
 import { IssueItem } from './IssueItem';
 import { useState } from 'react';
 import fetchWithError from '../helpers/fetchWithError';
 import Loader from './Loader';
 
 export default function IssuesList({ labels, status }) {
+    const queryClient = useQueryClient();
     const issuesQuery = useQuery({
         queryKey: [
             'issues',
@@ -13,16 +14,25 @@ export default function IssuesList({ labels, status }) {
                 status,
             },
         ],
-        queryFn: ({ signal }) => {
+        queryFn: async ({ signal }) => {
             const labelsString = labels
                 .map((label) => `labels[]=${label}`)
                 .join('&');
             const statusString = status ? `&status=${status}` : '';
 
-            return fetchWithError(
+            const results = await fetchWithError(
                 `/api/issues?${labelsString}${statusString}`,
                 { signal }
             );
+
+            results.forEach((issue) => {
+                queryClient.setQueryData(
+                    ['issue', issue.number.toString()],
+                    issue
+                );
+            });
+
+            return results;
         },
     });
     const [searchValue, setSearchValue] = useState('');
